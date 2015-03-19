@@ -33,7 +33,7 @@ router.get('/images', function(req, res){
   });
 });
 
-router.get('/image/:name', function (req, res) {
+router.get('/images/:name', function (req, res) {
   var name = req.params.name;
   var image = docker.getImage(name);
 
@@ -46,7 +46,22 @@ router.get('/image/:name', function (req, res) {
   });
 });
 
-router.post('/container/:name', function (req, res) {
+router.get('/images/create/:name', function (req, res) {
+  var name = req.params.name;
+
+  docker.createImage({
+    fromImage: name
+  }, function (err, stream) {
+    if (err) {
+      return res.status(500).send(err);
+    };
+
+    res.type('json');
+    stream.pipe(res);
+  });
+});
+
+router.get('/container/:name', function (req, res) {
 
   //
   // assume image is there till there neat way to track a pull is implemented
