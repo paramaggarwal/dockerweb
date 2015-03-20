@@ -1,4 +1,6 @@
+var _ = require('underscore');
 var docker = require('../clients/docker');
+var nginx = require('../clients/nginx');
 
 function socketHandler (socket) {
   socket.emit('log', "Welcome, client socket " + socket.id);
@@ -11,18 +13,56 @@ function socketHandler (socket) {
   });
 
   socket.on('containers:run', function (data, cb) {
-    console.log(data);
 
-    docker.pullImage(data.imageName, function (err, stream) {
+    var imageName = data.imageName;
+    var containerName = data.containerName;
+
+    docker.pullImage(imageName, function (err, stream) {
       if (err) {
         return cb && cb(err);
       };
 
       cb(null, true);
-
       stream.setEncoding('utf8');
+
       stream.on('data', function (data) {
-        socket.emit('status:containers:create', data);
+        socket.emit('status:containers:create', JSON.parse(data));
+      });
+
+      stream.on('end', function (data) {
+        socket.emit('status:containers:create', {
+          completed: true
+        });
+
+        docker.runImage(imageName, containerName, function (err, data) {
+          if (err) {
+            return console.error(err);
+          }
+
+          docker.listContainers(function (err, containers) {
+            if (err) {
+              return console.error(err);
+            }
+
+            var newContainer = _.find(containers, function (container) {
+              return container.Id = data.id
+            });
+
+            var leastPort = _.min(newContainer.Ports, function (port) {
+              return port.PrivatePort;
+            });
+
+            var port = leastPort.PublicPort;
+
+            nginx.link(containerName, containerName+'.param.xyz', port, function () {
+              console.log(arguments);
+            });
+
+            socket.emit('containers:list', containers);
+          });
+
+          socket.emit('success:containers:create', data);
+        });
       });
     });
 

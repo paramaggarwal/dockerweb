@@ -8,7 +8,8 @@ var App = React.createClass({
 
   getInitialState: function () {
     return {
-      running: false
+      running: false,
+      messages: {}
     };
   },
 
@@ -33,13 +34,50 @@ var App = React.createClass({
       });
     });
 
+    socket.on('containers:list', function (containers) {
+      console.log(containers);
+      self.setState({
+        containers: containers
+      });
+    });
+
     socket.on('status:containers:create', function (data) {
       console.log(data);
+
+      if (data.completed) {
+        self.setState({
+          messages: {}
+        });
+      } else {
+        var messages = self.state.messages;
+        messages[data.id || 'default'] = data;
+        self.setState({
+          messages: messages
+        });        
+      }
     });
+
+    socket.on('success:containers:create', function (data) {
+      console.log(data);
+    });
+
+    this.containerListInterval = setInterval(function () {
+      socket.emit('containers:list', '', function (err, containers) {
+        if (err) {
+          return console.error(err);
+        };
+
+        console.log(containers);
+        self.setState({
+          containers: containers
+        });
+      });
+    }, 10 * 1000);
   },
 
   componentWillUnmount: function () {
     this.socket.close();
+    clearInterval(this.containerListInterval);
   },
 
   propTypes: {
@@ -67,9 +105,34 @@ var App = React.createClass({
             </div>
             <div className='one-third column'>
               <label htmlFor="submitButton">&nbsp;</label>
-              <input type='submit' className='button-primary' id='submitButton' value={this.state.running ? '...' : 'Run'} disabled={this.state.running} />
+              <input type='submit' className='button-primary' id='submitButton' value={this.state.running ? 'Running...' : 'Run'} disabled={this.state.running} />
             </div>
           </form>
+        </div>
+
+        <div className='row'>
+          <table className="u-full-width">
+            <thead>
+              <tr>
+                <th>Image Layer</th>
+                <th>Status</th>
+                <th>ProgressDetail</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {_.map(this.state.messages, function (message) {
+                return (
+                  <tr key={message.id}>
+                    <td>{message.id}</td>
+                    <td>{message.status}</td>
+                    <td>{message.progressDetail ? JSON.stringify(message.progressDetail, null, 2) : ''}</td>
+                    <td><pre>{message.progress}</pre></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         <br />
@@ -87,18 +150,24 @@ var App = React.createClass({
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><a href='http://ubuntu1.param.xyz'>{"http://ubuntu1.param.xyz"}</a></td>
-                <td>ubuntu</td>
-                <td></td>
-                <td>2 hours</td>
-              </tr>
-              <tr>
-                <td><a href='http://es-test.param.xyz'>{"http://es-test.param.xyz"}</a></td>
-                <td>elasticsearch</td>
-                <td>9200, 9300</td>
-                <td>23 minutes</td>
-              </tr>
+              {_.map(this.state.containers, function (container) {
+
+                var leastPort = _.min(container.Ports, function (port) {
+                  return port.PrivatePort;
+                });
+                var port = leastPort.PublicPort;
+
+                return (
+                  <tr key={container.Id}>
+                    <td><a href={'http://192.168.99.100:' + port}>{'http://192.168.99.100:' + port}</a></td>
+                    <td>{container.Names[0].slice(1) + ' from ' + container.Image}</td>
+                    <td>{_.map(container.Ports, function (port) {
+                      return port.PrivatePort;
+                    }).join(', ')}</td>
+                    <td>{container.Status}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -108,6 +177,7 @@ var App = React.createClass({
 
   runContainer: function (e) {
     e.preventDefault();
+    var self = this;
     var socket = this.socket;
 
     var data = {
@@ -129,7 +199,7 @@ var App = React.createClass({
       };
 
       if (ack) {
-        this.setState({
+        self.setState({
           running: false
         });
 

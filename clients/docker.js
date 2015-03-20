@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var docker = require('dockerode')();
 
 function listContainers (cb) {
@@ -38,31 +39,7 @@ function runImage (image, name, cb) {
         return cb(err);
       };
 
-      container.inspect(function (err, data) {
-        if (err) {
-          return cb(err);
-        };
-
-        var id = data.Id;
-        var containerName = data.Name.slice(1);
-        var cmd = data.Config.Cmd;
-        var env = data.Config.Env;
-        var volumes = data.Config.Volumes;
-
-        var ports = _.map(data.NetworkSettings.Ports, function (val, key) {
-          // return key.split('/')[0];
-          return +val[0].HostPort;
-        });
-
-        cb(null, {
-          name: name,
-          container: container.id,
-          cmd: cmd,
-          env: env,
-          volumes: volumes,
-          ports: ports
-        });
-      });
+      cb(null, container);
     });
   });
 };
