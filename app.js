@@ -12,12 +12,22 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(path.join(__dirname, 'public', 'favicon.png')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+var lessMiddleware = require('less-middleware'); 
+app.use(lessMiddleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
+
+var browserify = require('browserify-middleware');
+app.get('/bundle.js', browserify('./browser.js', {
+  transform: ['reactify']
+}));
+
+require('node-jsx').install();
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
