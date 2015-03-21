@@ -1,0 +1,11 @@
+{
+  "vhost": {
+    "configure": false,
+    "url": "192.168.99.100"
+  },
+
+  "nginx": {
+    "confDir": "/usr/local/etc/nginx/conf.d/",
+    "pidLocation": "/usr/local/var/run/nginx.pid"
+  }
+}

@@ -1,7 +1,5 @@
-var vhosts = require('nginx-vhosts')({
-  confDir: '/usr/local/etc/nginx/conf.d/',
-  pidLocation: "/usr/local/var/run/nginx.pid"
-});
+var config = require('config');
+var vhosts = require('nginx-vhosts')(config.get('nginx'));
 
 function link (name, vhost, port, cb) {
   vhosts.write({

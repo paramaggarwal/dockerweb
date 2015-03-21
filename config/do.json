@@ -1,0 +1,11 @@
+{
+  "vhost": {
+    "configure": true,
+    "url": ".param.xyz"
+  },
+
+  "nginx": {
+    "confDir": "/etc/nginx/conf.d/",
+    "pidLocation": "/var/run/nginx.pid"
+  }
+}

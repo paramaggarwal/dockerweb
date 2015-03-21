@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var docker = require('../clients/docker');
 var nginx = require('../clients/nginx');
+var config = require('config');
 
 function socketHandler (socket) {
   socket.emit('log', "Welcome, client socket " + socket.id);
@@ -54,9 +55,12 @@ function socketHandler (socket) {
 
             var port = leastPort.PublicPort;
 
-            nginx.link(containerName, containerName+'.param.xyz', port, function () {
-              console.log(arguments);
-            });
+            if (config.get('vhost.configure')) {
+              var suffixurl = config.get('vhost.url');
+              nginx.link(containerName, containerName + suffixurl, port, function () {
+                console.log(arguments);
+              });              
+            };
 
             socket.emit('containers:list', containers);
           });

@@ -13,6 +13,10 @@ var App = React.createClass({
     };
   },
 
+  propTypes: {
+    vhost: React.PropTypes.object.isRequired
+  },
+
   componentDidMount: function () {
     var self = this;
     var socket = this.socket = io();
@@ -85,6 +89,7 @@ var App = React.createClass({
   },
 
   render: function () {
+    var self = this;
     var data = this.state.data || this.props.data;
 
     return (
@@ -152,15 +157,22 @@ var App = React.createClass({
             <tbody>
               {_.map(this.state.containers, function (container) {
 
-                var leastPort = _.min(container.Ports, function (port) {
-                  return port.PrivatePort;
-                });
-                var port = leastPort.PublicPort;
+                var containerName = container.Names[0].slice(1);
+
+                if (self.props.vhost.configure) {
+                  var linkURL = containerName + self.props.vhost.url;
+                } else {
+                  var leastPort = _.min(container.Ports, function (port) {
+                    return port.PrivatePort;
+                  });
+                  var port = leastPort.PublicPort;
+                  var linkURL = self.props.vhost.url + ':' + port;
+                }
 
                 return (
                   <tr key={container.Id}>
-                    <td><a href={'http://192.168.99.100:' + port}>{'http://192.168.99.100:' + port}</a></td>
-                    <td>{container.Names[0].slice(1) + ' from ' + container.Image}</td>
+                    <td><a href={linkURL}>{linkURL}</a></td>
+                    <td>{containerName + ' from ' + container.Image}</td>
                     <td>{_.map(container.Ports, function (port) {
                       return port.PrivatePort;
                     }).join(', ')}</td>
