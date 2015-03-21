@@ -8,6 +8,7 @@ var App = React.createClass({
 
   getInitialState: function () {
     return {
+      ready: false,
       running: false,
       messages: {}
     };
@@ -33,6 +34,7 @@ var App = React.createClass({
 
         console.log(containers);
         self.setState({
+          ready: true,
           containers: containers
         });
       });
@@ -110,7 +112,7 @@ var App = React.createClass({
             </div>
             <div className='one-third column'>
               <label htmlFor="submitButton">&nbsp;</label>
-              <input type='submit' className='button-primary' id='submitButton' value={this.state.running ? 'Running...' : 'Run'} disabled={this.state.running} />
+              {this.state.ready ? <input type='submit' className='button-primary' id='submitButton' value={this.state.running ? 'Running...' : 'Run'} disabled={this.state.running}/> : ''}
             </div>
           </form>
         </div>
