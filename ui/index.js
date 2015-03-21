@@ -160,13 +160,13 @@ var App = React.createClass({
                 var containerName = container.Names[0].slice(1);
 
                 if (self.props.vhost.configure) {
-                  var linkURL = containerName + self.props.vhost.url;
+                  var linkURL = 'http://' + containerName + self.props.vhost.url;
                 } else {
                   var leastPort = _.min(container.Ports, function (port) {
                     return port.PrivatePort;
                   });
                   var port = leastPort.PublicPort;
-                  var linkURL = self.props.vhost.url + ':' + port;
+                  var linkURL = 'http://' + self.props.vhost.url + ':' + port;
                 }
 
                 return (
