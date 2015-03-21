@@ -8,7 +8,7 @@ var App = require('../ui');
 /* GET home page. */
 router.get('/', function(req, res, next) {
   var props = {
-    vhost: config.get('vhost');
+    vhost: config.get('vhost')
   };
 
   res.render('index', {
