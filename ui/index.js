@@ -176,7 +176,7 @@ var App = React.createClass({
                     <td><a href={linkURL}>{linkURL}</a></td>
                     <td>{containerName + ' from ' + container.Image}</td>
                     <td>{_.map(container.Ports, function (port) {
-                      return port.PrivatePort;
+                      return port.PrivatePort ':' port.PublicPort;
                     }).join(', ')}</td>
                     <td>{container.Status}</td>
                   </tr>
